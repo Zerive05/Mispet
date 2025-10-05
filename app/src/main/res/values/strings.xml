@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Mispet</string>
+    <string name="app_title">MIS-PET</string>
+    <string name="search_hint">Search</string>
+    <string name="article_title">ARTIKEL</string>
+    <string name="mis_pet">MIS-PET</string>
 </resources>
