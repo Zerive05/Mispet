@@ -1,75 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="132dp"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="4dp"
-    android:layout_marginBottom="12dp">
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="4dp">
 
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/article_image"
-            android:layout_width="132dp"
-            android:layout_height="match_parent"
-            android:src="@drawable/img_pakcoy"
-            android:scaleType="centerCrop" />
+            android:id="@+id/article_thumbnail"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@tools:sample/backgrounds/scenic" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="12dp">
+            android:padding="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/article_thumbnail"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
-                android:id="@+id/article_title_text"
-                android:layout_width="wrap_content"
+                android:id="@+id/article_item_title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
                 android:fontFamily="@font/montserrat_bold"
-                android:text="Cara Budidaya Pakcoy"
-                android:textColor="#A6000000"
+                android:maxLines="2"
+                android:textColor="@color/primary_blue_dark"
                 android:textSize="16sp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                tools:text="Ini adalah Judul Artikel yang Mungkin Sangat Panjang Sekali" />
 
             <TextView
-                android:id="@+id/article_description_text"
-                android:layout_width="wrap_content"
+                android:id="@+id/article_item_description"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
+                android:ellipsize="end"
                 android:fontFamily="@font/montserrat_regular"
-                android:text="Panduan budidaya pakcoy cepat panen dan hasil melimpah."
-                android:textColor="#A6000000"
-                android:textSize="13sp"
                 android:maxLines="2"
-                android:ellipsize="end"/>
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                tools:text="Ini adalah deskripsi singkat dari artikel. Deskripsi ini juga bisa jadi cukup panjang dan akan dipotong jika melebihi batas." />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:gravity="bottom|end"
-                android:orientation="horizontal">
+            <!--
+                BAGIAN "BACA SELENGKAPNYA" SUDAH DIHAPUS DARI SINI.
+                Sebelumnya mungkin ada TextView seperti di bawah ini:
 
                 <TextView
+                    android:id="@+id/read_more"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/montserrat_medium"
-                    android:text="Baca Selengkapnya"
-                    android:textColor="#DF000000"
-                    android:textSize="13sp"
-                    android:gravity="center_vertical"/>
+                    android:layout_marginTop="4dp"
+                    android:text="baca selengkapnya"
+                    android:textColor="@color/primary_blue"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+            -->
 
-                <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_arrow_right_circle"
-                    android:layout_marginStart="8dp"/>
-            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
 
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.cardview.widget.CardView>

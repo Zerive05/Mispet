@@ -10,16 +10,48 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_mispet_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Mispet">
+        android:theme="@style/Theme.Mispet"
+        tools:targetApi="31">
+
+        <!-- 1. Jadikan SplashActivity sebagai LAUNCHER -->
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".SplashActivity"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
+            android:exported="true"> <!-- Theme NoActionBar agar status bar tidak muncul -->
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
 
+        <activity
+            android:name=".WelcomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Mispet.NoActionBar" />
+
+        <activity
+            android:name=".LoginActivity"
+            android:theme="@style/Theme.Material3.DayNight.NoActionBar"
+            android:exported="false"/>
+
+        <!-- Tambahkan di dalam tag <application> -->
+        <activity
+            android:name=".RegisterActivity"
+            android:exported="false" />
+
+        <!-- 2. Hapus intent-filter LAUNCHER dari MainActivity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"> <!-- exported bisa diubah ke false -->
+            <!-- Pastikan tidak ada <intent-filter> LAUNCHER di sini -->
+        </activity>
+
+        <!-- Activity lain seperti DetailActivity tidak perlu diubah -->
+        <activity
+            android:name=".DetailActivity"
+            android:exported="false" />
+
+    </application>
 </manifest>

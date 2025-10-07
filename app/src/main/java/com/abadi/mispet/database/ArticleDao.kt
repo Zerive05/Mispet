@@ -25,4 +25,7 @@ interface ArticleDao {
 
     @Query("DELETE FROM articles")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM articles WHERE title LIKE :searchQuery OR description LIKE :searchQuery ORDER BY id DESC")
+    fun getAllArticles(searchQuery: String): Flow<List<Article>>
 }

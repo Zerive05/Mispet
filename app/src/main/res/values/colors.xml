@@ -7,4 +7,5 @@
     <color name="content_background">#F1F1F1</color>
     <color name="gradient_start_blue">#5793BE</color>
     <color name="gradient_end_blue">#285677</color>
+    <color name="text_secondary">#8A000000</color> <!-- Abu-abu tua dengan transparansi 54% -->
 </resources>

@@ -1,17 +1,26 @@
 package com.abadi.mispet
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.widget.ImageView
+import android.widget.PopupMenu // <-- Import PopupMenu
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout // Pastikan import ini ada
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.abadi.mispet.adapter.ArticleAdapter
 import com.abadi.mispet.database.AppDatabase
-import com.abadi.mispet.database.Article
+import com.abadi.mispet.database.populateDatabase
+// import com.google.android.material.button.MaterialButton (Sudah tidak perlu)
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -19,81 +28,123 @@ class MainActivity : AppCompatActivity() {
     private lateinit var database: AppDatabase
     private lateinit var articleAdapter: ArticleAdapter
     private lateinit var recyclerView: RecyclerView
-    private lateinit var swipeRefreshLayout: SwipeRefreshLayout // Deklarasi
+    private lateinit var swipeRefreshLayout: SwipeRefreshLayout
+    private lateinit var searchView: SearchView
+    private lateinit var sessionManager: SessionManager
+
+    private val searchQuery = MutableStateFlow("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Inisialisasi Database
-        database = AppDatabase.getDatabase(this)
+        sessionManager = SessionManager(this)
 
-        // Inisialisasi RecyclerView dan Adapter
+        database = AppDatabase.getDatabase(this)
         recyclerView = findViewById(R.id.recycler_view_articles)
-        articleAdapter = ArticleAdapter(emptyList<Article>()) // Mulai dengan list kosong
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
+        searchView = findViewById(R.id.search_view)
+
+        setupRecyclerView()
+        setupSearchView()
+        setupSwipeRefresh()
+        observeArticles()
+
+        // --- LOGIKA MENU BARU ---
+        // 1. Temukan tombol menu dari navbar
+        val menuButton: ImageView = findViewById(R.id.menu_button)
+        // 2. Tambahkan listener untuk menampilkan popup menu
+        menuButton.setOnClickListener { view ->
+            showPopupMenu(view)
+        }
+    }
+
+    /**
+     * Fungsi untuk menampilkan PopupMenu saat ikon menu diklik.
+     */
+    private fun showPopupMenu(anchorView: View) {
+        val popup = PopupMenu(this, anchorView)
+        popup.menuInflater.inflate(R.menu.main_menu, popup.menu)
+
+        // Listener untuk item di dalam menu
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_logout -> {
+                    handleLogout() // Panggil fungsi logout yang sudah ada
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    /**
+     * Fungsi untuk menangani proses logout.
+     * (Fungsi ini tidak berubah, hanya dipanggil dari tempat yang berbeda)
+     */
+    private fun handleLogout() {
+        sessionManager.setLoggedIn(false)
+        Toast.makeText(this, "Anda telah logout", Toast.LENGTH_SHORT).show()
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+    }
+
+    private fun setupRecyclerView() {
+        articleAdapter = ArticleAdapter(emptyList())
         recyclerView.adapter = articleAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+    }
 
-        // Inisialisasi SwipeRefreshLayout
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout)
-
-        // Atur listener untuk aksi refresh
+    private fun setupSwipeRefresh() {
         swipeRefreshLayout.setOnRefreshListener {
-            // Panggil fungsi untuk memuat ulang data
             refreshArticles()
         }
+    }
 
-        // Ambil data dari database dan perbarui UI saat pertama kali dibuka
-        observeArticles()
+    private fun setupSearchView() {
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchView.clearFocus()
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                searchQuery.value = newText.orEmpty()
+                return true
+            }
+        })
     }
 
     private fun observeArticles() {
         lifecycleScope.launch {
-            database.articleDao().getAllArticles().collect { articlesFromDb ->
-                Log.d("MainActivity", "Data artikel terupdate: ${articlesFromDb.size} item")
-                articleAdapter.updateData(articlesFromDb)
-
-                // === PERBAIKAN 1 (Paling Penting) ===
-                // Hentikan animasi refresh SETELAH data baru berhasil ditampilkan di adapter.
-                // Ini memastikan loading berhenti pada waktu yang tepat.
-                if (swipeRefreshLayout.isRefreshing) {
-                    swipeRefreshLayout.isRefreshing = false
-                    Log.d("MainActivity", "Animasi refresh dihentikan.")
+            searchQuery
+                .debounce(300)
+                .flatMapLatest { query ->
+                    val formattedQuery = "%$query%"
+                    database.articleDao().getAllArticles(formattedQuery)
                 }
-            }
+                .collect { articlesFromDb ->
+                    Log.d("MainActivity", "Data terupdate untuk query '${searchQuery.value}': ${articlesFromDb.size} item")
+                    articleAdapter.updateData(articlesFromDb)
+
+                    if (swipeRefreshLayout.isRefreshing) {
+                        swipeRefreshLayout.isRefreshing = false
+                        Log.d("MainActivity", "Animasi refresh dihentikan.")
+                    }
+                }
         }
     }
 
     private fun refreshArticles() {
+        searchView.setQuery("", false)
+        searchView.clearFocus()
+        searchQuery.value = ""
+
         Log.d("MainActivity", "Memuat ulang artikel...")
-        // Tidak perlu menghentikan loading di sini, karena Flow akan menanganinya.
-
-        // Di aplikasi nyata, Anda mungkin akan mengambil data dari API di sini.
-        // Untuk simulasi, kita menghapus data lama dan mengisi ulang.
-        lifecycleScope.launch(Dispatchers.IO) { // Gunakan Dispatchers.IO untuk operasi database
-            // Panggil fungsi static populateDatabase dari AppDatabase
-            val dao = database.articleDao()
-
-            // Hapus data lama
-            dao.deleteAll()
-
-            // Buat daftar artikel baru
-            val articlesToInsert = mutableListOf<Article>()
-            for (i in 1..100) {
-                val article = Article(
-                    title = "Artikel Baru #${System.currentTimeMillis() % 1000 + i}", // Judul unik untuk melihat perubahan
-                    description = "Deskripsi untuk artikel baru nomor $i.",
-                    content = "Konten lengkap untuk artikel baru #$i.",
-                    author = "Penyegar"
-                )
-                articlesToInsert.add(article)
-            }
-            // Masukkan data baru
-            dao.insertAll(articlesToInsert)
-
-            // Setelah operasi database selesai, Flow di `observeArticles` akan
-            // secara otomatis mendeteksi perubahan dan memicu update UI.
-            // Di sanalah kita akan menghentikan animasi loading.
+        lifecycleScope.launch(Dispatchers.IO) {
+            populateDatabase(database.articleDao())
         }
     }
 }
